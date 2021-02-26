@@ -1,0 +1,6 @@
+Terminal 1:
+javac Client.java Server.java
+java Server 5053
+
+Terminal 2:
+java Client localhost 5053 lookup  www.google.com

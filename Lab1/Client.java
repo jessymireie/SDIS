@@ -19,7 +19,7 @@ public class Client {
         //send request
         DatagramSocket socket= new DatagramSocket();
 
-        String message=oper+" "+args[3];
+        String message=oper.toUpperCase()+" "+args[3];
         byte[] buf =message.getBytes();
         InetAddress address=InetAddress.getByName(host);
         DatagramPacket packet=new DatagramPacket(buf, buf.length,address,port);

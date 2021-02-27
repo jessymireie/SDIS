@@ -3,10 +3,10 @@ import java.net.*;
 import java.util.*;
 
 public class Server {
-    public static HashMap<String, InetAddress> table;
-    public static DatagramSocket socket;
-    public static DatagramPacket packet;
-    public static int port;
+    private static Map<String, InetAddress> table;
+    private static DatagramSocket socket;
+    private static DatagramPacket packet;
+    private static int port;
 
     public Server(int port) throws SocketException {
         table = new HashMap<String, InetAddress>();
@@ -24,14 +24,10 @@ public class Server {
         server.start();
     }
 
-
     private void start() throws IOException {
-        // start ao server
-        byte[] buffer = new byte[1024];
-        packet= new DatagramPacket(buffer, buffer.length);
-
-        //receive request
         while (true) {
+            byte[] buffer = new byte[1024];
+            packet = new DatagramPacket(buffer, buffer.length);
             try {
                 socket.receive(packet);
             } catch (IOException e) {
@@ -41,47 +37,48 @@ public class Server {
             String request = new String(packet.getData());
             System.out.println("Server: " + request);
 
-            //process request
+            // process request
             String[] message = request.split(" ");
-            String ret=new String();
+            String ret = new String();
             String oper = message[0];
-            String dnsName= message[1];
+            String dnsName = message[1];
 
-            if(oper.equals("LOOKUP"))
-                ret=lookup(dnsName);
-            else if(oper.equals("REGISTER")){
-                InetAddress ip= InetAddress.getByName(message[1]);
-                ret=register(dnsName,ip);
-            }
-            else
+            if (oper.equals("LOOKUP"))
+                ret = lookup(dnsName);
+            else if (oper.equals("REGISTER")) {
+                InetAddress ip = InetAddress.getByName(message[1]);
+                ret = register(dnsName, ip);
+            } else
                 System.exit(2);
- 
-            //reply
+
+            // reply
             reply(ret, dnsName);
-        }        
+        }
     }
 
     public static String lookup(String dnsName) {
-        System.out.println("LOOKUP"+ table.size());
-        if(table.size()==0) return "NOT_FOUND"; 
+        if (table.size() == 0)
+            return "NOT_FOUND";
         InetAddress ip = table.get(dnsName);
-        return ip == null ? "NOT_FOUND" : ip.toString();
+        //System.out.println("LOOKUP"+ dnsName+table);
+        return ip == null ? "NOT_FOUND" : ip.getHostAddress();
     }
 
     public static String register(String dnsName, InetAddress ip) {
-        System.out.println("REGISTER");
-        InetAddress ret = table.put(dnsName,ip);
+        InetAddress ret = table.put(dnsName, ip);
+        System.out.println("REGISTER "+ table);
         return ret==null ? String.valueOf(table.size()) : String.valueOf(-1) ;
    }
 
     private void reply(String ret, String dnsName) throws IOException {
-        socket= new DatagramSocket();
+        DatagramSocket socketReply= new DatagramSocket();
         String message=ret+" "+dnsName;
         byte[] buf =message.getBytes();
         InetAddress address=packet.getAddress();
+        port= packet.getPort();
         DatagramPacket  packetReply=new DatagramPacket(buf, buf.length,address,port);
-        socket.send(packetReply);
-        System.out.println("REPLY SENT");
+        socketReply.send(packetReply);
+        socketReply.close();        
     }
 
 }

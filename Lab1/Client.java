@@ -13,24 +13,33 @@ public class Client {
         sendRequest(args);
         receiveResponse();
         socket.close();
- 
     }
 
     private static void sendRequest(String[] args) throws IOException {
          //get info from arguments
          String host = args[0];
          int port=Integer.parseInt(args[1]);
-         String oper=args[2];
-         String opnd = args[3];
+         String oper=args[2].toUpperCase();
+         String dnsName = args[3];
  
         
-         //send request
-         socket= new DatagramSocket();
- 
-         String message=oper.toUpperCase()+" "+opnd;
-         byte[] buf =message.getBytes();
-         InetAddress address=InetAddress.getByName(host);
-         packet=new DatagramPacket(buf, buf.length,address,port);
+        //send request
+        socket= new DatagramSocket();
+        String message=new String();
+        
+        if (oper.equals("LOOKUP"))
+           message=oper+" "+dnsName;
+        else if (oper.equals("REGISTER")) {
+            String ip = args[4];
+            message=oper+" "+dnsName+" "+ip;
+        } else
+            System.exit(2);
+
+        System.out.println("Request: " + message);
+        byte[] buf =message.getBytes();
+        
+        InetAddress address=InetAddress.getByName(host);
+        packet=new DatagramPacket(buf, buf.length,address,port);
  
          socket.send(packet);
     }
@@ -40,17 +49,10 @@ public class Client {
         byte[] buffer = new byte[1024];
         packet= new DatagramPacket(buffer, buffer.length);
 
-        //receive request
-        while (true) {
-            try {
-                socket.receive(packet);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            String request = new String(packet.getData());
-            System.out.println("Server: " + request);
-        }
+        //receive response
+        socket.receive(packet);
+        String response = new String(packet.getData());
+        System.out.println("Reply: " + response);
     }
 
 }

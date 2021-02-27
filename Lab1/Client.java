@@ -1,42 +1,56 @@
-import java.util.*;
 import java.io.IOException;
 import java.net.*;
 
 public class Client {
+    public static DatagramSocket socket;
+    public static DatagramPacket packet;
     public static void main(String[] args) throws IOException {
-        if(args.length!=4){
+        if(args.length<4 && args.length>5 ){
             System.out.println("java Client <host> <port> <oper> <opnd>*");
             return;
         }
 
-        //get info from arguments
-        String host = args[0];
-        int port=Integer.parseInt(args[1]);
-        String oper=args[2];
-        String[] opnd = args[3].split(" ");
-
-       
-        //send request
-        DatagramSocket socket= new DatagramSocket();
-
-        String message=oper.toUpperCase()+" "+args[3];
-        byte[] buf =message.getBytes();
-        InetAddress address=InetAddress.getByName(host);
-        DatagramPacket packet=new DatagramPacket(buf, buf.length,address,port);
-
-        socket.send(packet);
-         
-        //response
-        byte[] rbuf=new byte[buf.length];
-        packet= new DatagramPacket(rbuf,rbuf.length);
-        socket.receive(packet);
-
-        //display response
-        String received = new String(packet.getData());
-        System.out.println("Echoed Message: "+received);
-
-        //close socket
+        sendRequest(args);
+        receiveResponse();
         socket.close();
  
-    }  
+    }
+
+    private static void sendRequest(String[] args) throws IOException {
+         //get info from arguments
+         String host = args[0];
+         int port=Integer.parseInt(args[1]);
+         String oper=args[2];
+         String opnd = args[3];
+ 
+        
+         //send request
+         socket= new DatagramSocket();
+ 
+         String message=oper.toUpperCase()+" "+opnd;
+         byte[] buf =message.getBytes();
+         InetAddress address=InetAddress.getByName(host);
+         packet=new DatagramPacket(buf, buf.length,address,port);
+ 
+         socket.send(packet);
+    }
+
+    private static void receiveResponse() throws IOException {
+        //response
+        byte[] buffer = new byte[1024];
+        packet= new DatagramPacket(buffer, buffer.length);
+
+        //receive request
+        while (true) {
+            try {
+                socket.receive(packet);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            String request = new String(packet.getData());
+            System.out.println("Server: " + request);
+        }
+    }
+
 }

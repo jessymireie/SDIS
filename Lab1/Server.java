@@ -60,7 +60,7 @@ public class Server {
         if (table.size() == 0)
             return "NOT_FOUND";
         InetAddress ip = table.get(dnsName);
-        //System.out.println("LOOKUP"+ dnsName+table);
+        System.out.println("LOOKUP"+ dnsName+table);
         return ip == null ? "NOT_FOUND" : ip.getHostAddress();
     }
 

@@ -1,0 +1,54 @@
+Service
+
+- Each File has a "home" peer, com a copia original do File
+
+- The backup service generates an identifier for each file it backs up.
+  Cryptographic hash function: SHA256 (to some bit string)
+
+- The bit string used to generate a file identifier should include data and or metadata that ensures that a modified file has a different fileId.
+
+- The backup service splits each file in chunks and then backs up each chunk independently
+  Each chunk is identified by the pair (fileId, chunkNo). 
+  Maximum size: 64KByte
+  If the file size is a multiple of the chunk size, the last chunk has size 0
+
+- To Recover a file:
+  The number of peers backing up a chunk is that chunk's replication degree.
+  Each file is backed up with a desired replication degree
+  The actual replication degree of a chunk may be different from the one that is desired
+
+- The backup service must provide the functionality for reclaiming disk space on peers
+  As a requirement of the service, each peer retains total control on the use of its local disk space
+  A file may be deleted. Deletion of the chunks of a file, may happen not only when the file is deleted on its file system, but also when it is modified, because, for the backup system, it will be a different file.
+
+- We will assume that this mapping is never lost.
+
+- The service must provide an interface to allow a client to:
+    Backup a file
+    Restore a file
+    Delete a file
+    Manage local service storage
+    Retrieve local service state information
+
+Peer Protocol:
+
+- Subprotocols:
+    chunk backup
+    chunk restore
+    file deletion
+    space reclaiming
+
+- Initiator-peer 
+
+- All subprotocols use a multicast channel, the control channel (MC)
+
+- These arguments must follow immediately the first three command line arguments, which are the protocol version, the peer id and the service access point
+
+-Message Format and Field Encoding:
+    -> Generic message is composed by two parts: a header and the body.
+    -> Header: sequences of ASCII codes terminated with the sequence '0xD'(CR)'0xA'(LF), separated by spaces
+        Nota: 1.there may be more than one space between fields;
+              2.there may be zero or more spaces after the last field in a line;
+              3.the header always terminates with an empty header line. I.e. the <CRLF> of the last header line is followed immediately by another <CRLF> without any character, white spaces included, in between.
+        <Version> <MessageType> <SenderId> <FileId> <ChunkNo> <ReplicationDeg> <CRLF>
+
